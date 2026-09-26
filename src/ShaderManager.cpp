@@ -57,7 +57,7 @@ void ShaderManager::Nettoyer_un(const std::string& nom) {
         dictionnaire_shaders.erase(nom);
     }
 }
-void ShaderManager::ChargerShaderDepuisTexte(const std::string& nom, const std::string& codeVS, const std::string& codeFS){
+bool ShaderManager::ChargerShaderDepuisTexte(const std::string& nom, const std::string& codeVS, const std::string& codeFS){
     //chargement du shader
     Shader le_shader = { 0 };
     if (!codeVS.empty() && !codeFS.empty()) {
@@ -81,8 +81,10 @@ void ShaderManager::ChargerShaderDepuisTexte(const std::string& nom, const std::
         }
         dictionnaire_shaders.insert_or_assign(nom,le_shader);
         std::cout<< "SUCCES : Shader '" << nom << "' ajoute au dictionaire" << std::endl;
+        return true;
     }
     else {
         std::cerr << "ERREUR : Impossible de charger le shader" << std::endl;
+        return false;
     }
 }

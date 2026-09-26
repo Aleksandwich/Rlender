@@ -359,7 +359,21 @@ void Dessiner_EditeurShader(SceneManager& La_scene, EditorContext& Les_variables
     //si on clique sur le bouton :
     if(ImGui::Button("Compiler et Appliquer", ImVec2(-1,30))){
         const char * defaultVS = "";//c'est le shader vs de base de raylib
-        La_scene.shaderManager.ChargerShaderDepuisTexte( Les_variables.nom_nouveau_shader, "", Les_variables.codeFragmentShader);
+        if(La_scene.shaderManager.ChargerShaderDepuisTexte( Les_variables.nom_nouveau_shader, "", Les_variables.codeFragmentShader)){            
+            Shader le_nouveau_shader = La_scene.shaderManager.dictionnaire_shaders[Les_variables.nom_nouveau_shader];
+            
+            for(auto & element : La_scene.GetNodes()){//mise a jours de tous les obj avec ce shader
+                //std::cout << "objets selectionne : " << element << "nom shader objet :" << element->nom_shader_actuel << "nouveau nom shader " << Les_variables.nom_nouveau_shader << std::endl;
+                if(element->nom_shader_actuel == Les_variables.nom_nouveau_shader){
+                    element->AppliquerShader(Les_variables.nom_nouveau_shader, La_scene.shaderManager.dictionnaire_shaders[Les_variables.nom_nouveau_shader]);
+                    std::cout << "shader applique" << std::endl;
+                }
+            }
+            for(auto & element : La_scene.GetSelection()){//pour les objets selectione
+                element->AppliquerShader(Les_variables.nom_nouveau_shader, le_nouveau_shader);
+                std::cout << "shader applique au elements selectione" << std::endl;
+            }
+        }
     }
     
     ImGui::End();

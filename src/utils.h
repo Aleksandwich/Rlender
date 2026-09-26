@@ -20,7 +20,28 @@ struct EditorContext {
     std::string code_preview;
 
     //Shaders
-    std::string codeFragmentShader = "void main() { gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); }"; //shader rouge par défaut
+    std::string codeFragmentShader = "#version 330"
+"\n// Input vertex attributes (from vertex shader)"
+"\nin vec2 fragTexCoord;"
+"\nin vec4 fragColor;"
+"\n// Input uniform values"
+"\nuniform sampler2D texture0;"
+"\nuniform vec4 colDiffuse;"
+"\n// Output fragment color"
+"\nout vec4 finalColor;"
+"\n// NOTE: Add here your custom variables"
+"\nvoid main(){"
+"\n    // Texel color fetching from texture sampler"
+"\n    vec4 texelColor = texture(texture0, fragTexCoord);"
+"\n"
+"\n    // NOTE: Implement here your fragment shader code"
+"\n"
+"\n    // final color is the color from the texture "
+"\n    //    times the tint color (colDiffuse)"
+"\n    //    times the fragment color (interpolated vertex color)"
+"\n    finalColor = texelColor*colDiffuse*fragColor;"
+"\n    finalColor = vec4(1.0, 0.0, 0.0, 1.0);"
+"\n}";//shader rouge par défaut
     std::string nom_nouveau_shader = "ShaderLive";
 };
 
