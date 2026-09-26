@@ -375,7 +375,6 @@ void Dessiner_EditeurShader(SceneManager& La_scene, EditorContext& Les_variables
             }
         }
     }
-    
     ImGui::End();
 }
 

@@ -46,6 +46,8 @@ std::unique_ptr<SceneNode> CubeNode::Cloner()
     clone->position = this->position;
     clone->taille = this->taille;
     clone->couleur = this->couleur;
+    clone->nom_shader_actuel = this->nom_shader_actuel;
+    clone->modele.materials[0].shader = this->modele.materials[0].shader; // on clone aussi le shader et le materiel
     clone->isSelected = true;
     static unsigned int compteur_cube_clones = 0;                        // logiquement on a un compteur pour les clones
     clone->nom = this->nom + "_" + std::to_string(compteur_cube_clones); // nouveau nom
