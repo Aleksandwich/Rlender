@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 
 project(application)
 
@@ -9,7 +9,9 @@ set(SRCS
     src/CodeGenerator.cpp
     src/Sauvgarde.cpp
     src/SceneManager.cpp
-    src/interface.cpp
+    src/SceneNode.cpp
+    src/Interface.cpp
+    src/ShaderManager.cpp
     src/tinyfiledialogs.c
     lib/rlImGui/rlImGui.cpp
     lib/imgui/imgui.cpp
@@ -35,8 +37,25 @@ if(WIN32)
         gdi32
         winmm
     )
+elseif(APPLE)
+    # macOS (raylib installed with Homebrew)
+    # Homebrew lives in /opt/homebrew (Apple Silicon) or /usr/local (Intel);
+    # add its prefix so find_package() can locate raylib's CMake config.
+    execute_process(
+        COMMAND brew --prefix
+        OUTPUT_VARIABLE HOMEBREW_PREFIX
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+    )
+    if(HOMEBREW_PREFIX)
+        list(APPEND CMAKE_PREFIX_PATH "${HOMEBREW_PREFIX}")
+    endif()
+ 
+    find_package(raylib REQUIRED)
+ 
+    target_link_libraries(application PRIVATE raylib)
 else()
-    #conf LINUX / MacOS (dynamique)
+    #conf LINUX (dynamique)
     target_link_libraries(application PRIVATE
         raylib
         GL

@@ -11,6 +11,11 @@ void SceneManager::DrawScene(){
         for(const auto & elements : selection){//const parce qu'on le change pas
             if (elements == nullptr) continue;
             DrawBoundingBox(elements->GetBoiteCollision(), GREEN);
+            //on dessine les gizmo voir si on affiche le gizmo ici
+                Vector3 position_base = elements[0].position; //pour eviter les acces mémoire répétés
+                DrawCylinderEx(position_base,(Vector3){position_base.x+4,position_base.y,position_base.z},0.20f,0.20f,10,RED);
+                DrawCylinderEx(position_base,(Vector3){position_base.x,position_base.y+4,position_base.z},0.20f,0.20f,10,GREEN);
+                DrawCylinderEx(position_base,(Vector3){position_base.x,position_base.y,position_base.z+4},0.20f,0.20f,10,BLUE);
         }
     }
     return;
@@ -131,7 +136,22 @@ const std::vector<std::unique_ptr<SceneNode>>& SceneManager::GetNodes() const{
     return sceneNodes;
 }
 
+
+void SceneManager::AjouterNoeud(std::unique_ptr<SceneNode> nouveau_noeud) {
+    sceneNodes.push_back(std::move(nouveau_noeud));
+}
+
+void SceneManager::SupprimerNoeud(SceneNode* cible){
+    auto efface = std::remove_if(sceneNodes.begin(), sceneNodes.end(), [cible](const std::unique_ptr<SceneNode>& noeud){ return noeud.get() == cible; });
+    sceneNodes.erase(efface, sceneNodes.end());
+}
+
+
 void SceneManager::SauvegarderProjet(std::string cheminFichier) {
+    //check si on a l'extention json ou pas dans le nom
+    if (cheminFichier.length() < 5 || cheminFichier.substr(cheminFichier.length() - 5) != ".json") {
+        cheminFichier += ".json";
+    }
     nlohmann::json projet_json;
     
     // On crée un tableau JSON pour stocker notre liste de noeuds
@@ -187,20 +207,9 @@ void SceneManager::SauvegarderProjet(std::string cheminFichier) {
     std::cout << "Projet sauvegarde avec succes dans : " << cheminFichier << std::endl;
 }
 
-
-void SceneManager::AjouterNoeud(std::unique_ptr<SceneNode> nouveau_noeud) {
-    sceneNodes.push_back(std::move(nouveau_noeud));
-}
-
-void SceneManager::SupprimerNoeud(SceneNode* cible){
-    auto efface = std::remove_if(sceneNodes.begin(), sceneNodes.end(), [cible](const std::unique_ptr<SceneNode>& noeud){ return noeud.get() == cible; });
-    sceneNodes.erase(efface, sceneNodes.end());
-}
-
-//fini la fonction bien frero
-
 //vide la scene actuelle et remplis avec le json lu
 void SceneManager::ChargerProjet(std::string cheminFichier){
+    Deselectionne();
     sceneNodes.clear();//on vide les noeuds d'avant
     std::ifstream file(cheminFichier);
     if (!file) {
@@ -281,10 +290,11 @@ void SceneManager::ChargerProjet(std::string cheminFichier){
     }
     file.close();
 }
-void SceneManager::Gerer_pointeur(Camera3D camera_editeur){
+
+void SceneManager::Gerer_pointeur(Camera3D camera_editeur, EditorContext & variables){
     //raycasting
     if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && !ImGui::GetIO().WantCaptureMouse){
-        Ray rayon = GetMouseRay(GetMousePosition(), camera_editeur);
+        Ray rayon = GetScreenToWorldRay(GetMousePosition(), camera_editeur);
         SceneNode* objetTouche = nullptr;
         float distanceMin = 999999.0f;
         //recherche de qui collisionne sa bounding box avec le rayon de la souris
@@ -297,6 +307,42 @@ void SceneManager::Gerer_pointeur(Camera3D camera_editeur){
                 distanceMin = collision.distance;
             }
         }
+
+        //check si on a une selection
+        if(!GetSelection().empty()){
+
+            Vector3 position_base = GetSelection()[0]->position; //pour eviter les acces mémoire répétés
+            BoundingBox box_x = { 
+                (Vector3){position_base.x, position_base.y - 0.5f, position_base.z - 0.5f},
+                (Vector3){position_base.x + 4.0f, position_base.y + 0.5f, position_base.z + 0.5f}
+            };
+            BoundingBox box_y = { 
+                (Vector3){position_base.x - 0.5f, position_base.y, position_base.z - 0.5f},
+                (Vector3){position_base.x + 0.5f, position_base.y + 4.0f, position_base.z + 0.5f}
+            };
+            BoundingBox box_z = { 
+                (Vector3){position_base.x - 0.5f, position_base.y - 0.5f, position_base.z},
+                (Vector3){position_base.x + 0.5f, position_base.y + 0.5f, position_base.z + 4.0f}
+            };  
+            RayCollision collisionx = GetRayCollisionBox(rayon,box_x);
+            RayCollision collisiony = GetRayCollisionBox(rayon,box_y);
+            RayCollision collisionz = GetRayCollisionBox(rayon,box_z);
+                
+            if (collisionx.hit) { variables.axe_en_cours = 'X'; 
+                std::cout << "X touche" << std::endl;
+                return;
+            }
+            if (collisiony.hit) { variables.axe_en_cours = 'Y';
+                std::cout << "Y touche" << std::endl;
+                return;
+            }
+            if (collisionz.hit) { variables.axe_en_cours = 'Z'; 
+                std::cout << "Z touche" << std::endl;
+                return;
+            }   
+        }
+        variables.axe_en_cours = '0';
+
         if(objetTouche != nullptr){
             if(IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)){    
                 //ctrl avec plusieurs objets
@@ -310,5 +356,35 @@ void SceneManager::Gerer_pointeur(Camera3D camera_editeur){
             }
         }
     }
+    if(IsMouseButtonDown(MOUSE_BUTTON_LEFT) && variables.axe_en_cours != '0'){
+        //si on maintient le clic et qu'on touche a un axe
+        if (!GetSelection().empty()) {
+            Vector2 pos_souris = GetMouseDelta();
+            switch (variables.axe_en_cours){
+                case 'X':
+                    GetSelection()[0]->position.x += pos_souris.x*0.02f; //psk en 2d la souris va vite TODO etaloner la valeurs
+                    variables.flag_changements = true;
+                    break;
+
+                case 'Y':
+                    GetSelection()[0]->position.y -= pos_souris.y*0.02f;//sur l'ecrant y descend et en 3D il monte c'est inversé donc -
+                    variables.flag_changements = true;
+                break;
+
+                case 'Z':
+                    GetSelection()[0]->position.z += pos_souris.x*0.01f + (pos_souris.y*0.01f);//les deux ? jsp au choix
+                    variables.flag_changements = true;
+                break;
+            }
+        }
+    }
+    if(IsMouseButtonReleased(MOUSE_BUTTON_LEFT)){
+        variables.axe_en_cours = '0';
+    }
 }
 
+
+void SceneManager::ViderScene() {
+    Deselectionne(); //clear la sélection avant
+    sceneNodes.clear();
+}

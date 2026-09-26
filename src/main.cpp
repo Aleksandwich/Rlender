@@ -4,7 +4,7 @@
 #include "SceneNode.h"
 #include "Sauvgarde.h"
 #include "SceneManager.h"
-#include "interface.h"
+#include "Interface.h"
 
 int main(void) {
 
@@ -15,9 +15,7 @@ int main(void) {
     ça doit etre modifiable dans les parametres du logiciel plus tard
     limiteSauvgarde c'est la limite dynamique du compteur c'est ça que faut changer pour reduite au augmenter le nombre de sauvgardes etc
     */
-    int compteurModifs = 0; //un compteur pour dire que
-    //int limiteSauvgarde = 50;
-    bool flag_changements = false;//le flag pour dire si un changement a été fait
+    
     std::string contenu = ""; //c'est un pointeur sur la stack le vrai texte est sur le tas donc pas de soucis de taille c'est dans la ram :)
 
     //pour gerer les objets de la scene:
@@ -48,12 +46,6 @@ int main(void) {
     cameraEditeur.fovy = 45.0f;
     cameraEditeur.projection = type_projection_camera;//possibilité de changer ça apres
 
-    //bool perspect = true;
-    //bool orto = false;
-    //float tempsMaintien = 0.0f;//le temps actuel accumulé
-    //float tempsExige = 0.5f;//TODO issue #7
-    //bool modeFlyActif = false;//pour savoir si on est en mode fly
-    //init rlImGui
     rlImGuiSetup(true);
     EditorContext Les_variables;
     // Variable pour la position de notre cube test
@@ -92,7 +84,7 @@ int main(void) {
             BeginMode3D(cameraEditeur);
             //cette ligne dessine tout
             La_scene.DrawScene();
-            DrawGrid(10, 1.0f);
+            DrawGrid(1000, 1.0f);
             EndMode3D();
 
             if(IsWindowResized()&& !IsWindowState(FLAG_WINDOW_MAXIMIZED)){
@@ -118,23 +110,14 @@ int main(void) {
             DrawFPS(10, 10);//pour debug si le logiciel tourne bien
 
         EndDrawing();
-        if(flag_changements){
-            //si on a eu un changement on augmente le compteur
-            compteurModifs++;
-            //faut regenerer le code
-            contenu = GenererCodeComplet(La_scene.SceneManager::GetNodes());//on donne à manger tous les noeuds de la scene
-            flag_changements = false; //faut penser à le rebaisser le flag hein
-            //std::cout << "changement : " << compteurModifs << std::endl;
-        }
-        if(compteurModifs >= Les_parametres.limiteSauvgarde){
-            //la je peut lancer la sauvgarde
-            Sauvgarde("projet_exemple.cpp",contenu);
-            compteurModifs = 0;
-        }
+        
     }
 
-    // Nettoyage
+    //nettoyage
     rlImGuiShutdown();
+    La_scene.shaderManager.Nettoyer_tout();
+    La_scene.ViderScene();
+    
     CloseWindow();
 
     return 0;
