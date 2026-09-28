@@ -22,6 +22,8 @@ int main(void) {
 
     SceneManager La_scene;
 
+    EditorContext Les_variables;
+
     //la fenêtre Raylib pour voir le rendu
     
     Parametres Les_parametres;
@@ -32,7 +34,11 @@ int main(void) {
         MaximizeWindow();//si on a le plein ecran a mettre au demarage
     }
     SetTargetFPS(60);
-
+    
+    //les logs
+    Initialiser_Logs(&Les_variables);
+    SetTraceLogCallback(Fonction_Log);
+    
     /*
     la camera 3D pour voir la scene
     ici je défini la camera et apres on va avoir une section pour changer son type dynamiquement
@@ -47,9 +53,6 @@ int main(void) {
     cameraEditeur.projection = type_projection_camera;//possibilité de changer ça apres
 
     rlImGuiSetup(true);
-    EditorContext Les_variables;
-    // Variable pour la position de notre cube test
-    float cubePosition[3] = { 0.0f, 0.0f, 0.0f };
 
     // Boucle principale
         while (!WindowShouldClose()) {
