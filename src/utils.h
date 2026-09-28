@@ -1,5 +1,7 @@
 #pragma once
 #include "raylib.h"
+#include <vector>
+#include <variant>
 
 //structure qui regroupe toutes les variables volantes de l'éditeur
 struct EditorContext {
@@ -42,7 +44,9 @@ struct EditorContext {
 "\n    finalColor = texelColor*colDiffuse*fragColor;"
 "\n    finalColor = vec4(1.0, 0.0, 0.0, 1.0);"
 "\n}";//shader rouge par défaut
-    std::string nom_nouveau_shader = "ShaderLive";
+std::string nom_nouveau_shader = "ShaderLive";
+std::vector <std::string> liste_log;//les logs
+bool defiler_log = false;
 };
 
 struct Parametres {
@@ -52,4 +56,7 @@ struct Parametres {
     int screenHeight = 720; //c'est la taille de la fenetre
     float Chronos_sauvegarde = 0.0f; //on attend ce temps avant d'ecrire sur le json (pour épargner le disque dur)
     bool attente_sauvegarde; //flag
+    int nb_lignes_max_console = 500;
 };
+
+

@@ -31,6 +31,8 @@ target_include_directories(application PRIVATE
 
 if(WIN32)
     #conf WINDOWS (statique)
+    # Force l'inclusion statique des bibliothèques standards C et C++
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static -static-libgcc -static-libstdc++")
     target_link_libraries(application PRIVATE
         ${CMAKE_SOURCE_DIR}/lib/raylib/libraylib.a
         opengl32

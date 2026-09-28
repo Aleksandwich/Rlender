@@ -1,5 +1,8 @@
 #include "Interface.h"
 
+//pour les log
+EditorContext* contexte_global_pour_les_logs = nullptr;
+int * nb_lignes_max_console; //pointeur argument
 void Dessiner_MenuPrincipale(SceneManager& La_scene, EditorContext& Les_variables, Parametres& Les_parametres){
     //recuperation des variables etc
     std::vector<SceneNode*> noeuds_selectione = La_scene.GetSelection();
@@ -86,8 +89,12 @@ void Dessiner_MenuPrincipale(SceneManager& La_scene, EditorContext& Les_variable
                 Changement = true;
             }
         
-            // Si l'utilisateur tape un nouveau chiffre pour la hauteur
+            //si utilisateur tape un nouveau chiffre pour la hauteur
             if (ImGui::InputInt("Hauteur", &Les_parametres.screenHeight)) {
+                Changement = true;
+            }
+            //pour changer le nombre de lignes max de la console
+            if (ImGui::InputInt("lignes log", &Les_parametres.nb_lignes_max_console)) {
                 Changement = true;
             }
             if(ImGui::Button("Plein ecran",{50.0f,50.0f})){
@@ -375,12 +382,42 @@ void Dessiner_EditeurShader(SceneManager& La_scene, EditorContext& Les_variables
             }
         }
     }
-    
+    ImGui::End();
+}
+
+void Initialiser_Logs(EditorContext* contexte_cible){
+    contexte_global_pour_les_logs = contexte_cible;
+}
+
+void Fonction_Log(int type_message, const char *texte,  va_list arguments){
+    //TraceLogCallback(type_message, texte, arguments);
+    char buffer[256];
+    vsnprintf(buffer, 256,texte,arguments);
+    if (contexte_global_pour_les_logs != nullptr){
+        if(contexte_global_pour_les_logs->liste_log.size() >= *nb_lignes_max_console){
+            contexte_global_pour_les_logs->liste_log.erase (contexte_global_pour_les_logs->liste_log.begin ());
+        }
+        contexte_global_pour_les_logs->liste_log.push_back(buffer);
+        contexte_global_pour_les_logs->defiler_log = true;
+    }
+}
+
+void Dessiner_Console(SceneManager& La_scene, EditorContext& Les_variables){
+    ImGui::Begin("Console");
+    ImGui::BeginChild("ZoneLogs",ImVec2(0,0), true);
+    for(auto & ligne : Les_variables.liste_log){
+        ImGui::TextUnformatted(ligne.c_str());
+    }
+    if(Les_variables.defiler_log){
+        ImGui::SetScrollHereY(1.0f);
+        Les_variables.defiler_log = false;
+    }
+    ImGui::EndChild();
     ImGui::End();
 }
 
 void gere_interface(SceneManager& La_scene, Camera3D& cameraEditeur, EditorContext& Les_variables, Parametres& Les_parametres){
-    
+    nb_lignes_max_console = &Les_parametres.nb_lignes_max_console;
     rlImGuiBegin();
     //raycasting
     La_scene.Gerer_pointeur(cameraEditeur, Les_variables);
@@ -391,5 +428,6 @@ void gere_interface(SceneManager& La_scene, Camera3D& cameraEditeur, EditorConte
     Dessiner_ControlesCamera(cameraEditeur, Les_variables);
     Dessiner_ApercuCode(La_scene, Les_variables, Les_parametres);
     Dessiner_EditeurShader(La_scene,Les_variables);
+    Dessiner_Console(La_scene, Les_variables);
     rlImGuiEnd();
 }
