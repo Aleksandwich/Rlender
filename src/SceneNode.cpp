@@ -40,8 +40,7 @@ void CubeNode::Draw()
     }
 }
 
-std::unique_ptr<SceneNode> CubeNode::Cloner()
-{
+std::unique_ptr<SceneNode> CubeNode::Cloner(){
     auto clone = std::make_unique<CubeNode>(); // faut en cree un autre pour eviter les crash de mémoire
     clone->position = this->position;
     clone->taille = this->taille;
@@ -125,6 +124,8 @@ std::unique_ptr<SceneNode> SphereNode::Cloner()
     clone->position = this->position;
     clone->taille = this->taille;
     clone->couleur = this->couleur;
+    clone->nom_shader_actuel = this->nom_shader_actuel;
+    clone->modele.materials[0].shader = this->modele.materials[0].shader; // on clone aussi le shader et le materiel
     clone->isSelected = true;
     static unsigned int compteur_sphere_clones = 0;                        // logiquement on a un compteur pour les clones
     clone->nom = this->nom + "_" + std::to_string(compteur_sphere_clones); // nouveau nom
@@ -132,20 +133,18 @@ std::unique_ptr<SceneNode> SphereNode::Cloner()
 }
 
 // le plan
-PlaneNode::PlaneNode()
-{
+PlaneNode::PlaneNode(){
     nom = "Plane";
     type = "plane";
     taille = {5.0f, 1.0f, 5.0f};
     modele = LoadModelFromMesh(GenMeshPlane(1.0f, 1.0f, 10, 10)); // resolution 10x10
 }
-PlaneNode::~PlaneNode()
-{
+
+PlaneNode::~PlaneNode(){
     UnloadModel(modele);
 }
 
-void PlaneNode::Draw()
-{
+void PlaneNode::Draw(){
     DrawModelEx(modele, position, {0, 1, 0}, 0.0f, taille, couleur);
     if (isSelected)
     {
@@ -153,8 +152,7 @@ void PlaneNode::Draw()
     }
 }
 
-BoundingBox PlaneNode::GetBoiteCollision()
-{
+BoundingBox PlaneNode::GetBoiteCollision(){
     return {
         {position.x - taille.x / 2, position.y - 0.01f, position.z - taille.z / 2},
         {position.x + taille.x / 2, position.y + 0.01f, position.z + taille.z / 2}};
@@ -166,41 +164,38 @@ std::unique_ptr<SceneNode> PlaneNode::Cloner()
     clone->position = this->position;
     clone->taille = this->taille;
     clone->couleur = this->couleur;
+    clone->nom_shader_actuel = this->nom_shader_actuel;
+    clone->modele.materials[0].shader = this->modele.materials[0].shader; // on clone aussi le shader et le materiel
     clone->isSelected = true;
     clone->nom = this->nom + "_clone";
     return clone;
 }
 
-std::string PlaneNode::ToCode()
-{
+std::string PlaneNode::ToCode(){
     return "";
 }
 
-std::string PlaneNode::GetDrawCode()
-{
+std::string PlaneNode::GetDrawCode(){
     return "";
 }
 
-std::string PlaneNode::GetInitCode()
-{
+std::string PlaneNode::GetInitCode(){
     return "";
 }
 
 // cylindre
-CylinderNode::CylinderNode()
-{
+CylinderNode::CylinderNode(){
     nom = "Cylinder";
     type = "cylinder";
     taille = {1.0f, 2.0f, 1.0f};
     modele = LoadModelFromMesh(GenMeshCylinder(1.0f, 1.0f, 16));
 }
-CylinderNode::~CylinderNode()
-{
+
+CylinderNode::~CylinderNode(){
     UnloadModel(modele);
 }
 
-void CylinderNode::Draw()
-{
+void CylinderNode::Draw(){
     DrawModelEx(modele, position, {0, 1, 0}, 0.0f, taille, couleur);
     if (isSelected)
     {
@@ -208,96 +203,87 @@ void CylinderNode::Draw()
     }
 }
 
-BoundingBox CylinderNode::GetBoiteCollision()
-{
+BoundingBox CylinderNode::GetBoiteCollision(){
     return {{position.x - taille.x, position.y - taille.y / 2, position.z - taille.z},
             {position.x + taille.x, position.y + taille.y / 2, position.z + taille.z}};
 }
-std::unique_ptr<SceneNode> CylinderNode::Cloner()
-{
+std::unique_ptr<SceneNode> CylinderNode::Cloner(){
     auto clone = std::make_unique<CylinderNode>();
     clone->position = this->position;
     clone->taille = this->taille;
     clone->couleur = this->couleur;
+    clone->nom_shader_actuel = this->nom_shader_actuel;
+    clone->modele.materials[0].shader = this->modele.materials[0].shader; // on clone aussi le shader et le materiel
     clone->isSelected = true;
     clone->nom = this->nom + "_clone";
     return clone;
 }
 
-std::string CylinderNode::ToCode()
-{
-    return "";
-}
-std::string CylinderNode::GetDrawCode()
-{
+std::string CylinderNode::ToCode(){
     return "";
 }
 
-std::string CylinderNode::GetInitCode()
-{
+std::string CylinderNode::GetDrawCode(){
+    return "";
+}
+
+std::string CylinderNode::GetInitCode(){
     return "";
 }
 
 // cone
 // pour representer un cone
-ConeNode::ConeNode()
-{
+ConeNode::ConeNode(){
     nom = "Cone";
     type = "cone";
     taille = {1.0f, 2.0f, 1.0f};
     modele = LoadModelFromMesh(GenMeshCone(1.0f, 1.0f, 16));
 }
 
-ConeNode::~ConeNode()
-{
+ConeNode::~ConeNode(){
     UnloadModel(modele);
 }
 
-void ConeNode::Draw()
-{
+void ConeNode::Draw(){
     DrawModelEx(modele, position, {0, 1, 0}, 0.0f, taille, couleur);
     if (isSelected)
         DrawModelWiresEx(modele, position, {0, 1, 0}, 0.0f, taille, YELLOW);
 }
 
-BoundingBox ConeNode::GetBoiteCollision()
-{
+BoundingBox ConeNode::GetBoiteCollision(){
     return {{position.x - taille.x, position.y - 0.0f, position.z - taille.z}, // Base au sol
             {position.x + taille.x, position.y + taille.y, position.z + taille.z}};
 }
-std::unique_ptr<SceneNode> ConeNode::Cloner()
-{
+std::unique_ptr<SceneNode> ConeNode::Cloner(){
     auto clone = std::make_unique<ConeNode>();
     clone->position = this->position;
     clone->taille = this->taille;
     clone->couleur = this->couleur;
+    clone->nom_shader_actuel = this->nom_shader_actuel;
+    clone->modele.materials[0].shader = this->modele.materials[0].shader; // on clone aussi le shader et le materiel
     clone->isSelected = true;
     clone->nom = this->nom + "_clone";
     return clone;
 }
-std::string ConeNode::ToCode()
-{
+std::string ConeNode::ToCode(){
     return "";
 }
 
-std::string ConeNode::GetDrawCode()
-{
+std::string ConeNode::GetDrawCode(){
     return "";
 }
 
-std::string ConeNode::GetInitCode()
-{
+std::string ConeNode::GetInitCode(){
     return "";
 }
 
 // pour la camera
-CameraNode::CameraNode()
-{
+CameraNode::CameraNode(){
     nom = "camera3D";
     type = "camera3D";
 }
-void CameraNode::Draw()
-{
+
+void CameraNode::Draw(){
     // on dessine la camera en wireframe comme godot etc
     DrawCubeWires(position, 1.0f, 1.0f, 1.0f, PURPLE);
     DrawLine3D(position, target, PURPLE);
@@ -308,21 +294,19 @@ void CameraNode::Draw()
         DrawLine3D(position, target, YELLOW);
     }
 }
-std::string CameraNode::ToCode()
-{
+
+std::string CameraNode::ToCode(){
     return "";
 }
 
-std::string CameraNode::GetDrawCode()
-{
+std::string CameraNode::GetDrawCode(){
     // faut ajouter cette ligne dans la boucle de rendu
     std::stringstream code;
     code << "     UpdateCamera(&" << nom << " , " << mode_camera << ");\n";
     return code.str();
 }
 
-std::string CameraNode::GetInitCode()
-{
+std::string CameraNode::GetInitCode(){
     std::stringstream code;
     code << " Camera3D " << nom << " = { 0 };\n";
     code << nom << ".position = {" << position.x << "f, " << position.y << "f, " << position.z << "f};\n";
@@ -333,8 +317,7 @@ std::string CameraNode::GetInitCode()
     return code.str();
 }
 
-BoundingBox CameraNode::GetBoiteCollision()
-{
+BoundingBox CameraNode::GetBoiteCollision(){
     Vector3 min, max;
     BoundingBox ma_bounding_box;
 
@@ -349,8 +332,8 @@ BoundingBox CameraNode::GetBoiteCollision()
     ma_bounding_box.min = min;
     return ma_bounding_box;
 }
-std::unique_ptr<SceneNode> CameraNode::Cloner()
-{
+
+std::unique_ptr<SceneNode> CameraNode::Cloner(){
     auto clone = std::make_unique<CameraNode>(*this);
     clone->isSelected = true;
     static unsigned int compteur_camera_clones = 0;                        // logiquement on a un compteur pour les clones
