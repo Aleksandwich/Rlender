@@ -1,6 +1,8 @@
 #pragma once
 #include "raylib.h"
 #include <vector>
+#include <variant>
+
 //structure qui regroupe toutes les variables volantes de l'éditeur
 struct EditorContext {
     int compteurModifs = 0; //un compteur pour dire que
@@ -56,3 +58,5 @@ struct Parametres {
     bool attente_sauvegarde; //flag
     int nb_lignes_max_console = 500;
 };
+
+
